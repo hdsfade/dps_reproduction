@@ -1,7 +1,6 @@
 import numpy as np
 import torch.nn as nn
 import scipy
-from motionblur.motionblur import Kernel
 import torch
 
 def extract(a, t, x_shape):
@@ -20,36 +19,6 @@ def extract(a, t, x_shape):
     out = a.gather(-1, t.cpu())
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
 
-def space_timesteps(timesteps, space_counts):
-    if isinstance(space_counts, str):
-        if space_counts.startswith('ddim'):
-            desired_count = int(space_counts[len('ddim'):])
-            pos_space = (timesteps - 1) // (desired_count-1)
-            return set(range(0, timesteps, pos_space))
-        space_counts = [int(x) for x in space_counts.split(',')]
-    elif isinstance(space_counts, int):
-        space_counts = [space_counts]
-    per_steps = timesteps // len(space_counts)
-    extra = timesteps % len(space_counts)
-    start_idx = 0
-    all_indices = []
-    for i, count in enumerate(space_counts):
-        size = per_steps + (1 if i < extra else 0)
-        if size < count or count < 1:
-            raise ValueError(f"Invalid step space in {space_counts} - per step size {size}")
-        elif count == 1:
-            space = 1
-        else:
-            space = (size - 1) // (count - 1)
-        cur_idx = 0.0
-        taken_steps = []
-        for _ in range(count):
-            taken_steps.append(start_idx + round(cur_idx))
-            cur_idx += space
-        all_indices.append(taken_steps)
-        start_idx += size
-    return all_indices
-
 def clear_color(x):
     x = x.detach().cpu().squeeze().numpy()
     return normalize_np(np.transpose(x, (1, 2, 0)))
@@ -59,48 +28,6 @@ def normalize_np(img):
     img -= np.min(img)
     img /= np.max(img)
     return img
-
-class Blurkernel(nn.Module):
-    def __init__(self, blur_type='gaussian', kernel_size=31, std=3.0, device=None):
-        super().__init__()
-        self.blur_type = blur_type
-        self.kernel_size = kernel_size
-        self.std = std
-        self.device = device
-        self.seq = nn.Sequential(
-            nn.ReflectionPad2d(self.kernel_size//2),
-            nn.Conv2d(3, 3, self.kernel_size, stride=1, padding=0, bias=False, groups=3)
-        )
-
-        self.weights_init()
-
-    def forward(self, x):
-        return self.seq(x)
-
-    def weights_init(self):
-        if self.blur_type == "gaussian":
-            n = np.zeros((self.kernel_size, self.kernel_size))
-            n[self.kernel_size // 2,self.kernel_size // 2] = 1
-            k = scipy.ndimage.gaussian_filter(n, sigma=self.std)
-            k = torch.from_numpy(k)
-            self.k = k
-            for name, f in self.named_parameters():
-                f.data.copy_(k)
-        elif self.blur_type == "motion":
-            k = Kernel(size=(self.kernel_size, self.kernel_size), intensity=self.std).kernelMatrix
-            k = torch.from_numpy(k)
-            self.k = k
-            for name, f in self.named_parameters():
-                f.data.copy_(k)
-
-    def update_weights(self, k):
-        if not torch.is_tensor(k):
-            k = torch.from_numpy(k).to(self.device)
-        for name, f in self.named_parameters():
-            f.data.copy_(k)
-
-    def get_kernel(self):
-        return self.k
 
 class mask_generator:
     def __init__(self, mask_type, mask_len_range=None, mask_prob_range=None,

@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from .posterior_calculator import PosteriorCalculatorFactory
-from .helpers import extract, space_timesteps
+from .helpers import extract
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 import os
