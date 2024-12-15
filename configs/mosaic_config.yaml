@@ -1,0 +1,16 @@
+conditioning:
+  method: mcg
+  params:
+    scale: 0.3
+
+data:
+  name: ffhq
+  root: ./data/samples/
+
+measurement:
+  operator:
+    name: mosaic
+    mosaic_size: 4
+  noise: 
+    name: gaussian
+    sigma: 0.05

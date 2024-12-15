@@ -1,0 +1,17 @@
+conditioning:
+  method: mcg
+  params:
+    scale: 0.3
+
+data:
+  name: ffhq
+  root: ./data/samples/
+
+measurement:
+  operator:
+    name: super_resolution
+    scale_factor: 4
+  
+  noise: 
+    name: gaussian
+    sigma: 0.05

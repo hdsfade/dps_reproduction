@@ -1,0 +1,6 @@
+sampler_type: ddpm
+betas_type: linear
+noise_steps: 1000
+mean_type: eps
+var_type: prop
+
