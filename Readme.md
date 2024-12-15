@@ -44,7 +44,7 @@ python download_ffhq.py
 Use the provided scripts to run DPS on a chosen dataset. Modify configuration parameters as needed in the `config/` directory.
 
 ```bash
-python3 sample_condition.py --model_config=configs/ffhq_model_config.yaml --diffusion_config=configs/diffusion_config.yaml --task_config=configs/inpainting_config.yaml --gpu 1 --batch_size 1
+python sample_condition.py --model_config=configs/ffhq_model_config.yaml --diffusion_config=configs/diffusion_config.yaml --task_config=configs/inpainting_config.yaml --gpu 1 --batch_size 1
 ```
 
 ### 5. Evaluating Results
